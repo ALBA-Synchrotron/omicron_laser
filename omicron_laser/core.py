@@ -357,6 +357,9 @@ class Omicron_laser:
     def get_working_hours(self):
         return self._ask(b"GWH")[0]
 
+    def get_maximum_power(self):
+        return float(self._ask(b"GMP")[0])
+
     def measure_diode_power(self) -> float:
         return float(self._ask(b"MDP")[0])
 
@@ -492,11 +495,16 @@ if __name__ == "__main__":
     print("Latched Failure: ", laser.get_latched_failure())
     print("Level power: ", laser.get_level_power()/0xFFF)
 
-    print("Set Level power to 0xFF0", laser.set_level_power(0xFF0))
-    print("Level power: ", laser.get_level_power()/0xFFF)
+    # Less than 1mW for safety reasons.
+    print("Set Level power to 25", laser.set_level_power(25))
+    print("Failure byte: ", laser.get_failure_bytes())
+    level_power = laser.get_level_power()/0xFFF
+    max_power = laser.get_maximum_power()
+    print("Laser maximum power:", max_power)
+    print("Level power: ", level_power * 100, level_power * max_power)
 
     print("Temporary power: ", laser.get_temporary_power())
-    print("Set temporal power", laser.set_temporary_power(0.56))
+    print("Set temporal power", laser.set_temporary_power(0.01))
     print("Temporary power: ", laser.get_temporary_power())
 
     op_mode = laser.get_operation_mode()
