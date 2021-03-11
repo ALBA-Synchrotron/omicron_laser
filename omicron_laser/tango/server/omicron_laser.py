@@ -7,11 +7,7 @@
 
 """Tango server class for Omicron_laser"""
 
-import asyncio
-import urllib.parse
-
-from connio import connection_for_url
-from tango import GreenMode
+import serial
 from tango.server import Device, attribute, command, device_property
 
 import omicron_laser.core
@@ -19,29 +15,23 @@ import omicron_laser.core
 
 class Omicron_laser(Device):
 
-    green_mode = GreenMode.Asyncio
-
     url = device_property(dtype=str)
 
-    async def init_device(self):
-        await super().init_device()
-        self.connection = connection_for_url(self.url, concurrency="async")
-        self.omicron_laser = omicron_laser.core.Omicron_laser(self.connection)
+    def init_device(self):
+        super().init_device()
+        self.connection = serial.serial_for_url(self.url)
+        self.omicron_laser = omicron_laser.core.Omicron_laser(
+            self.connection)
 
-    @attribute(dtype=str, label="ID")
-    def idn(self):
-        return self.omicron_laser.get_idn()
 
-    @attribute(dtype=float, unit="bar", label="Pressure")
-    async def pressure(self):
-        # example processing the result
-        pressure = await self.omicron_laser.get_pressure()
-        return pressure / 1000
+    
+
+################################################################################
 
     @attribute(dtype=float, unit="bar", label="Pressure set point")
-    async def pressure_setpoint(self):
+    def pressure_setpoint(self):
         # example processing the result
-        setpoint = await self.omicron_laser.get_pressure_setpoint()
+        setpoint = self.omicron_laser.get_pressure_setpoint()
         return setpoint / 1000
 
     @pressure_setpoint.setter
